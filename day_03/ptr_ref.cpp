@@ -33,8 +33,7 @@ int main(void){
      // int& r[3] = {x, y, z};     // 不存在引用数组
      int* (&rarr)[3] = p;          // 但存在数组引用
 
-     int arr[3];                   // 数组引用
-     int(&rarr)[3] = arr;
-
+     int arr[3];
+     int(&rarr)[3] = arr;          // 数组引用
      return 0;
 }
