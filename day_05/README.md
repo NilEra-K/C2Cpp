@@ -31,3 +31,52 @@ class 类名 {
 }
 ```
 
+**对象的定义与销毁**
+- 在栈中定义单个对象
+    - `类名 对象;`
+    - `类名 对象(实参表);`
+- 在栈中定义对象数组
+    - `类名 对象数组[元素个数];`
+    - `类名 对象数组[元素个数] = {类名(实参表), ...};`
+    - `类名 对象数组[] = {类名(实参表), ...};`
+- 在堆中定义/销毁单个对象
+    - `类名* 对象指针 = new 类名;`
+    - `类名* 对象指针 = new 类名();`
+    - `类名* 对象指针 = new 类名(实参表);`
+    - `delete 对象指针;`
+- 在堆中定义/销毁单个对象
+    - `类名* 对象数组指针 = new 类名[元素个数];`
+    - `类名* 对象数组指针 = new 类名[元素个数] {类名(实参表), ...};`
+    - `delete[] 对象数组指针;`
+
+**String 类**
+```
+class string {
+public:
+    //                        初始化表
+    //                           v
+    string(const char* psz = "") : m_psz(new char[strlen(psz)+1]) {
+        // 在 this 指针指向的内存空间中定义 m_psz
+        // 并赋初值为指向堆内存
+        strcpy(m_psz, psz);
+    }
+
+    string(const string& that) : m_psz(new char[strlen(that.m_psz)+1]) {
+        // 在 this 指向内存空间中定义 m_psz
+        // 并赋初值为指向另一块堆内存
+        strcpy(m_psz, that.m_psz);
+    }
+
+    string& operator=(const string& that){
+        delete[] this->m_psz; // 释放旧资源
+        this->m_psz = new char[strlen(that.m_psz)+1]; // 分配新资源
+        strcpy(this.m_psz, that.m_psz); // 拷贝新内容
+    }
+
+    char* c_str(){
+        return m_psz;
+    }
+private:
+    char* m_psz;
+}
+```
