@@ -29,8 +29,16 @@ int main(void){
      cout << "s3 = " << s3 << endl;
 
      // 只要 "=" 两边的类型不一致, 编译器就会尝试将 "=" 右边的类型转换为和 "=" 左边的类型一致
-     string s4 = "Hello";
+     string s4 = "Hello"; // 定义匿名 string 类对象, 利用匿名 string 类对象.string("Hello")
+                          // 匿名 string 类对象维护字符串 --> "Hello"
+                          // string s4 = 匿名 string 类对象;
      cout << "s4 = " << s4.c_str() << endl;
      cout << "s4 = " << s4 << endl;
+
+     string s5;     // 定义 s5, 利用 s5.string() -> s5 维护的字符串为 "\0"
+     s5 = "Hello";  // 定义匿名 string 类对象, 利用匿名 string 类对象.string("Hello")
+                    // string s4 = 匿名 string 类对象;
+     cout << "s5 = " << s5.c_str() << endl;
+     cout << "s5 = " << s5 << endl;
      return 0;
 }
