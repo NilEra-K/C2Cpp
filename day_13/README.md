@@ -212,14 +212,109 @@ C++ 标准库封装的流对象 (例如: cin/cout), 允许我们放置在 `bool`
     - 获取读长度
         - `streamsize istream::gcount(void)`
             - 返回最后一次输出流中读取的字节数
+- 写入二进制数据
+    - `ostream& ostream::write(const char* bufer, streamsize num)`
+        - 将缓冲区 `buffer` 中的 `num` 个字节写入到输出流中
+        - 返回流本身, 其在布尔上写文中的值, 成功(写满)为 `true`, 失败(没写满)为 `false`
 
+**读写指针与随机访问**
+- 设置读(seekg)/写(seekp)指针位置
+    - `istream& istream::seekg(off_type offset, ios::seekdir origin)`
+    - `ostream& ostream::seekp(off_type offset, ios::seekdir origin)`
+        - `origin` 表示 **偏移量 `offset` 的起点** <p>
+          `ios::begin` 从文件的第一个字节 <p>
+          `ios::cur` 从文件的当前位置 <p>
+          `ios::end` 从文件的最后一个字节的下一个位置 <p>
+        - `offset` 为 **负/正** 表示向文件 **头/尾** 的方向偏移
+        - 读写指针被移动到文件头之前或者文件尾之后, 则失败
+- 获取读(tellg)/写(tellp)指针位置
+    - `pos_type istream::tellg(void);`
+    - `pos_type ostream::tellp(void);`
+        - 返回读/写指针当前位置相对于文件头的字节偏移量
 
+**字符串流**
+- 输出字符串流
+    ```
+    #include <sstream>
+    ostringstream oss;
+    oss << 1234 << ' ' << 56.78 << ' ' << "ABCD";
+    string os = oss.str();
+    ```
+- 输入字符串流
+    ```
+    #include <sstream>
+    string is("1234 56.78 ABCD");
+    istringstream iss (is);
+    int i;
+    double d;
+    string s;
+    iss >> i >> d >> s;
+    ```
 
+**格式化 I/O**
+- 流函数(一组成员函数)
+    - I/O流类(ios)定义了一组用于控制输入输出格式的公有成员函数, 调用这些函数可以改变 I/O流对象内部的格式状态, 进而影响后续输入输出的格式化方式
+- 流控制符(一组全局函数)
+    - 标准库提供了一组特殊的全局函数, 它们有的带有参数( 在 `#include <iomanip>` 头文件中声明 ) , 有的不带参数( 在 `#include <iostream>` 头文件中声明)
+    - 因其可以直接被嵌入到输入输出表达式中, 影响后续输入输出格式, 故被形象的称之为**流控制符**
+- ***I/O 格式化函数***
 
+| 格式化函数 | 说明 |
+| :-: | :-: |
+| `int ios::precision(int);` | 设置浮点精度, 返回原精度 |
+| `int ios::precision(void) const;` | 获取浮点精度 |
+| `int ios::width(int);` | 设置显示域宽, 返回原域宽 |
+| `int ios::width(void) const;` | 获取显示域宽 |
+| `char ios::fall(char);` | 设置填充字符, 返回原字符 |
+| `char ios::fall(void) const;` | 获取填充字符 |
+| `long ios::flags(long);` | 设置格式标志, 返回原标志 |
+| `long ios::flags(void) const;` | 获取格式标志 |
+| `long ios::setf(long);` | 添加格式标志位,返回原位置 |
+| `long ios::setf(long, long);` | 添加格式标志位, 返回原标志, 先用第二个参数将互斥域清零 |
+| `long ios::unsetf(long);` | 清除格式标志位, 返回原标志 |
+- 一般而言, 对 I/O流对格式的改变都是**持久**的, **即只要不再设置新格式, 当前格式将始终保持下去**
+- **显示域宽是个例外**, 通过 `ios::width(int)` 设置的域宽, 只影响紧随其后的第一次输出, 再往后的输出又恢复到默认状态
 
+- ***I/O 流格式标志***
 
+| 格式标志位 | 互斥域 | 说明 |
+| :-: | :-: | :-: |
+| `ios::left` | `ios::adjustfield` | 左对齐 |
+| `ios::right` | `ios::adjustfield` | 右对齐 |
+| `ios::internal` | `ios::adjustfield` | 数值右对齐, 符号左对齐 |
+| `ios::dec` | `ios::basefield` | 十进制 |
+| `ios::oct` | `ios::basefield` | 八进制 |
+| `ios::hex` | `ios::basefield` | 十六进制 |
+| `ios::fixed` | `ios::floatfield` | 用定点小鼠表示浮点数 |
+| `ios::scientific` | `ios::floatfield` | 用科学计数法表示浮点数 |
+| `ios::showpos` | - | 正整数前面显示 **+** 号 |
+| `ios::showbase` | - | 显示进制前缀 **0** 或 **0x** |
+| `ios::showpoint` | - | 显示小数点和尾数 **0** |
+| `ios::uppercase` | - | 数中字母显示为大写 |
+| `ios::boolalpha` | - | 用字符串表示布尔值 |
+| `ios::unitbuf` | - | 每次插入都刷流缓冲 |
+| `ios::skipws` | - | 以空白字符作分隔符 |
 
+- ***I/O 流格式化控制符***
 
+| 格式化控制符 | 说明 | 输入 | 输出 |
+| :-: | :-: | :-: | :-: |
+| `left` | 左对齐 | NO | YES |
+| `right` | 右对齐 | NO | YES |
+| `internal` | 数值右对齐, 符号左对齐 | NO | YES |
+| `dec` | 十进制 | YES | YES |
+| `oct` | 八进制 | YES | YES |
+| `hex` | 十六进制 | YES | YES |
+| `fixed` | 用定点小数表示浮点数 | NO | YES |
+| `scientific` | 用科学计数法表示浮点数 | NO | YES |
+| `ends` | 空字符 | NO | YES |
+| `endl` | 换行符, 刷流缓冲 | NO | YES |
+| `flush` | 刷流缓冲 | NO | YES |
+| `setprecision(int)` | 设置浮点精度 | NO | YES |
+| `setw(int)` | 设置显示域宽 | NO | YES |
+| `setfill(int)` | 设置填充字符 | NO | YES |
+| `setiosflag(long)` | 设置格式标志 | YES | YES |
+| `resetiosflags(long)` | 消除格式标志 | YES | YES |
 
 
 
