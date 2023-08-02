@@ -1,4 +1,6 @@
-/* 默认的拷贝构造和拷贝赋值函数, 在特定的场景下(类中有指针成员), 会出现浅拷贝的缺陷 */
+/* 移动语义 */
+// 编译时使用下面命令
+// g++ trans.cpp -o trans -std=c++11 -fno-elide-constructors
 #include <iostream>
 #include <cstring>
 
@@ -8,44 +10,39 @@ using namespace std;
 class String {
 public:
      String(const char* psz = "") : m_psz(new char[strlen(psz) + 1]) {
-          // 定义 m_psz, 初值为指向一块堆内存(动态资源)
-          // char* m_psz = new char[strlen(psz) + 1];
-          strcpy(m_psz, psz); // 将 psz中的字符串拷贝到堆内存中
+          strcpy(m_psz, psz); 
      }
-
-     // 默认的拷贝构造函数
-     /* *********************************************
-     String(const String& that) {
-          // char* m_psz = that.m_psz;
-          // 只复制了地址, 没有复制地址指向的数据 -> 浅拷贝
-     }
-     ********************************************* */
 
      // 深拷贝构造
      String (const String& that) : m_psz(new char[strlen(that.m_psz) + 1]){
           cout << "深拷贝构造函数被调用" << endl;
-          // char* m_psz = new char[strlen(that.m_psz) + 1];
-          strcpy(m_psz, that.m_psz);    // 不复制地址, 而复制地址所指向的数据 -> 深拷贝
+          strcpy(m_psz, that.m_psz);
      }
 
-     // 默认的拷贝赋值函数
-     /* *********************************************
+     // 转移构造函数——体现为资源的转移
+     String (String&& that) : m_psz(that.m_psz){
+          // char* m_psz = that.m_psz;
+          that.m_psz = NULL;
+          cout << "转移构造函数被调用" << endl;
+     }
+
+     // 深拷贝赋值——体现为资源的重建
      String operator=(const String& that) {
-          this->m_psz = that.m_psz;
-          // 只复制了地址, 没有复制地址指向的数据 -> 浅拷贝
+          cout << "深拷贝赋值被调用" << endl;
+          if(this != &that){ 
+               delete[] this->m_psz;
+               this->m_psz = new char[strlen(that.m_psz) + 1];
+               strcpy(m_psz, that.m_psz);
+          }
           return *this;
      }
-     ********************************************* */
 
-     // 深拷贝赋值
-     String operator=(const String& that) {
-          // 防止用户自己给自己赋值, 出现 str = str 的写法
-          // 当满足条件时才进行代码的执行
-          if(this != &that){ 
-               delete[] this->m_psz;         // 释放旧资源
-               this->m_psz = new char[strlen(that.m_psz) + 1]; // 申请新资源
-               strcpy(m_psz, that.m_psz);    // 复制数据
-          }
+     // 转移赋值函数——体现为资源的转移
+     String operator=(String&& that) {
+          cout << "转移赋值被调用" << endl;
+          delete[] this->m_psz;
+          this->m_psz = that.m_psz;
+          that.m_psz = NULL;
           return *this;
      }
 
@@ -56,32 +53,25 @@ public:
      char* c_str() { return m_psz; }
 
 private:
-     char* m_psz;   // 指针型成员变量
+     char* m_psz;
 };
 
-// 以上代码模拟 类的设计者 (例如: 类库、被人设计的类、自己的设计的类)
-///////////////////////////////////////////////////////////
-// 以下代码模拟 类的使用者
-
 int main(void){
-     String s1("Hello");
-     // cout 遇到 char* 会打印其指向的字符串
-     // 为了防止此问题需要将其强制转化为 void* 型指针
-     cout << "s1 = " << s1.c_str() << endl
-          << "s1 所执指向的堆内存的地址为: " << (void*)s1.c_str() << endl;
+     String a("Hello");
+     cout << ">>> 1" << endl;
+     String b = a;                 // 定义 b , 利用 b.String(a) -> 触发 String 类深拷贝构造函数
 
-     String s2(s1); // 触发拷贝构造
-     cout << "s2 = " << s2.c_str() << endl
-          << "s2 所执指向的堆内存的地址为: " << (void*)s2.c_str() << endl;
+     cout << ">>> 2" << endl;
+     String c = String("World");   // 定义 c , 利用 c.String(String("world")) -> 触发 String 类的深拷贝构造函数
+                                   // 但是, String("World") 是一个将亡值, 也就是说, 我们用转移资源代替重建资源
+                                   // 使用右值引用来进行操作
+     cout << ">>> 3" << endl;
+     String d, e;
+     d = a;
 
-     String s3;     // 定义 s3, 利用 s3.String() -> 维护一个字节的内存 "\0"
-     s3 = s2;       // s3.operatot=(s2) 拷贝赋值, 也发生了浅拷贝现象
-     cout << "s3 : " << s3.c_str() << endl
-          << "s3 所执指向的堆内存的地址为: " << (void*)s3.c_str() << endl;
-
+     cout << ">>> 4" << endl;
+     e = String("World");
      return 0;
-} // s1.~String()   s2.~String() 浅拷贝的情况下, 会导致段错误 double free, 对一块相同的地址空间进行多次释放
-  // s2.~String()   s3.~String() 浅拷贝的情况下, 会导致段错误 double free, 对一块相同的地址空间进行多次释放
-
+}
 
 
